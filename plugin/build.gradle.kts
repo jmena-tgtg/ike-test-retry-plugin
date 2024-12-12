@@ -120,8 +120,11 @@ publishing {
     publications {
         create<MavenPublication>("pluginMaven") {
             groupId = "org.gradle"
-            artifactId = "test-retry-gradle-plugin"
+            artifactId = "test-retry-gradle-plugin-tgtg"
             pom {
+                name = "Test Retry Plugin TGTG"
+                description = "A fork of Gradle's test-retry plugin with extended features"
+                url = "https://github.com/too-good-to-go/test-retry-gradle-plugin-tgtg"
                 licenses {
                     license {
                         name.set("Apache-2.0")
@@ -130,15 +133,17 @@ publishing {
                 }
             }
         }
+
     }
+
     repositories {
-        maven {
-            name = "GradleBuildInternalSnapshots"
-            url = uri("https://repo.grdev.net/artifactory/libs-snapshots-local")
-            credentials {
-                username = project.findProperty("artifactoryUsername") as String?
-                password = project.findProperty("artifactoryPassword") as String?
+        maven("https://tgtg-artifacts-261167912015.d.codeartifact.eu-west-1.amazonaws.com/maven/tgtg-external/") {
+            name = "codeArtifact"
+            val codeArtifactPassword: String? by project
+            if (codeArtifactPassword?.takeIf { it.isNotBlank() } == null) {
+                logger.warn("No CodeArtifact token found")
             }
+            credentials(PasswordCredentials::class)
         }
     }
 }
