@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  pull_request:
+
+concurrency:
+  # Group name will be the name of the workflow + (PR's number if the trigger is a pull request OR
+  # fallback to {run_number-run_attempt} if it's a push, which will not cancel/block runs on develop branch)
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || format('{0}-{1}', github.run_number, github.run_attempt) }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checking out repo
+        uses: actions/checkout@v4
+        with: ${{ github.head_ref }}
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 8
+
+      - name: Prepare JDK8 env var
+        shell: bash
+        run: echo "JDK8=$JAVA_HOME" >> $GITHUB_ENV
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build project
+        run: |
+          set -x
+          ./gradlew build --info --stacktrace
+
+      - name: Publish Unit Test Results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: "**/build/test-results/*/*.xml"
+          check_name: "Unit Tests Result"
+          detailed_summary: true
+
