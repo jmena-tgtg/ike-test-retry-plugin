@@ -1,8 +1,8 @@
 import com.google.gson.Gson
-import org.gradle.testretry.build.GradleVersionData
-import org.gradle.testretry.build.GradleVersionsCommandLineArgumentProvider
+import dk.tgtg.testretry.build.GradleVersionData
+import dk.tgtg.testretry.build.GradleVersionsCommandLineArgumentProvider
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URL
+import java.net.URI
 
 plugins {
     java
@@ -18,7 +18,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = "org.gradle"
+group = "dk.tgtg"
 description = "Mitigate flaky tests by retrying tests when they fail"
 
 val javaToolchainVersion: String? by project
@@ -28,6 +28,10 @@ java {
     toolchain {
         languageVersion.set(javaLanguageVersion)
     }
+}
+
+java {
+    withSourcesJar()
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -72,11 +76,12 @@ tasks.shadowJar {
     dependencies {
         include(dependency("org.ow2.asm:asm"))
     }
-    relocate("org.objectweb.asm", "org.gradle.testretry.org.objectweb.asm")
+    relocate("org.objectweb.asm", "dk.tgtg.testretry.org.objectweb.asm")
     archiveClassifier.set("")
     into(".") {
         from(rootProject.layout.projectDirectory.file("LICENSE"))
     }
+    archiveFileName.set("test-retry-tgtg-${archiveVersion.get()}.jar")
 }
 
 tasks.jar {
@@ -85,14 +90,14 @@ tasks.jar {
 }
 
 gradlePlugin {
-    website.set("https://github.com/gradle/test-retry-gradle-plugin")
-    vcsUrl.set("https://github.com/gradle/test-retry-gradle-plugin.git")
+    website.set("https://github.com/toogoodtogo/test-retry-gradle-plugin-tgtg")
+    vcsUrl.set("https://github.com/toogoodtogo/test-retry-gradle-plugin-tgtg.git")
     plugins {
         register("testRetry") {
-            id = "org.gradle.test-retry"
-            displayName = "Gradle test retry plugin"
+            id = "dk.tgtg.test-retry-tgtg"
+            displayName = "TooGoodToGo's fork of Gradle test retry plugin"
             description = project.description
-            implementationClass = "org.gradle.testretry.TestRetryPlugin"
+            implementationClass = "dk.tgtg.testretry.TestRetryPlugin"
             tags.addAll("test", "flaky")
         }
     }
@@ -119,8 +124,8 @@ license {
 publishing {
     publications {
         create<MavenPublication>("pluginMaven") {
-            groupId = "org.gradle"
-            artifactId = "test-retry-gradle-plugin-tgtg"
+            groupId = "dk.tgtg"
+            artifactId = "test-retry-tgtg"
             pom {
                 name = "Test Retry Plugin TGTG"
                 description = "A fork of Gradle's test-retry plugin with extended features"
@@ -195,7 +200,7 @@ tasks.register<Wrapper>("nightlyWrapper") {
     group = "wrapper"
     validateDistributionUrl = true
     doFirst {
-        val jsonText = URL("https://services.gradle.org/versions/nightly").readText()
+        val jsonText = URI("https://services.gradle.org/versions/nightly").toURL().readText()
         val versionInfo = Gson().fromJson(jsonText, VersionDownloadInfo::class.java)
         distributionUrl = versionInfo.downloadUrl
     }
