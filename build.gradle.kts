@@ -10,7 +10,7 @@ buildScan {
     }
 }
 
-group = "org.gradle"
+group = "dk.tgtg"
 description = "Mitigate flaky tests by retrying tests when they fail"
 
 evaluationDependsOn("plugin")
@@ -36,7 +36,7 @@ tasks.named("candidate") {
 wrapperUpgrade {
     gradle {
         register("self") {
-            repo.set("gradle/test-retry-gradle-plugin")
+            repo.set("toogoodtogo/test-retry-gradle-plugin-tgtg")
             options.gitCommitExtraArgs.add("--signoff")
         }
     }

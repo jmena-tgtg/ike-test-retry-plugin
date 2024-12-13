@@ -1,0 +1,74 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checking out this repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 8
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUMABLE_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-duration-seconds: 1200
+
+      - name: Retrieve CodeArtifact token
+        id: codeartifact_auth
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          AWS_DOMAIN: tgtg-artifacts
+          AWS_ACCOUNT_ID: 261167912015
+        run: |
+          set -e
+          token=$(
+            aws codeartifact get-authorization-token \
+              --domain $AWS_DOMAIN \
+              --domain-owner $AWS_ACCOUNT_ID \
+              --query authorizationToken \
+              --output text
+            )
+          echo "::add-mask::${token}"
+          echo "token=${token}" >> $GITHUB_OUTPUT
+
+      - name: Build project
+        run: |
+          set -x
+          ./gradlew :lib:jar :lib:sourcesJar --info --stacktrace
+
+      - name: Get release version
+        id: version
+        run: |
+          echo "version=$(./gradlew -q lib:printVersion)" >> $GITHUB_OUTPUT
+
+      - name: Publish release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
+          name: ${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+
+      - name: Publish release to CodeArtifact
+        env:
+          ORG_GRADLE_PROJECT_codeArtifactPassword: ${{ steps.codeartifact_auth.outputs.token }}
+        run: |
+          set -x
+          ./gradlew :lib:publish --info --stacktrace

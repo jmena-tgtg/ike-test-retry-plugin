@@ -92,7 +92,7 @@ The `retry` extension is of the following type:
 
 [source,java]
 ----
-package org.gradle.testretry;
+package dk.tgtg.testretry;
 
 import org.gradle.api.Action;
 import org.gradle.api.provider.Property;

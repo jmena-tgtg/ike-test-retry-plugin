@@ -1,5 +1,5 @@
 import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.testretry.build.PluginsVersionData
+import dk.tgtg.testretry.build.PluginsVersionData
 
 plugins {
     id("groovy")
@@ -13,11 +13,12 @@ dependencies {
 }
 
 val snippetsDir = file("../samples")
-val processedSnippetsDir = file("$buildDir/samples")
+val buildDirectory = layout.buildDirectory.get()
+val processedSnippetsDir = file("$buildDirectory/samples")
 
 val tokens: Map<String, Provider<String>> = mapOf(
     "test-retry-plugin-version" to provider {
-        PluginsVersionData.latestVersion("org.gradle", "test-retry-gradle-plugin")
+        PluginsVersionData.latestVersion("dk.tgtg", "test-retry-gradle-plugin")
     }
 )
 
