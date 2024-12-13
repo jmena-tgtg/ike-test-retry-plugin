@@ -10,6 +10,10 @@ buildScan {
     }
 }
 
+subprojects {
+    tasks.withType<Javadoc>().all { enabled = false }
+}
+
 group = "dk.tgtg"
 description = "Mitigate flaky tests by retrying tests when they fail"
 
